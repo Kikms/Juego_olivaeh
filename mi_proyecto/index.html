@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Recoger Aceitunas</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+        
+        const game = new Phaser.Game(config);
+        let player;
+        let cursors;
+        let olives;
+        let score = 0;
+        let scoreText;
+        let timeText;
+        let timeLeft = 17;
+        let gameOver = false;
+        
+        function preload() {
+            this.load.image('background', 'ruta/del/fondo.png');
+            this.load.image('player', 'ruta/del/muñeco.png');
+            this.load.image('olive', 'C:/Users/00130035/Descargas/aceituna.png');
+        }
+        
+        function create() {
+            this.add.image(400, 300, 'background');
+            
+            player = this.physics.add.sprite(400, 500, 'player');
+            player.setCollideWorldBounds(true);
+            
+            cursors = this.input.keyboard.createCursorKeys();
+            
+            olives = this.physics.add.group();
+            
+            for (let i = 0; i < 6; i++) {
+                let x = Phaser.Math.Between(50, 750);
+                let y = Phaser.Math.Between(-600, -50);
+                let olive = olives.create(x, y, 'olive');
+                olive.setVelocityY(Phaser.Math.Between(50, 150));
+            }
+            
+            this.physics.add.overlap(player, olives, collectOlive, null, this);
+            
+            scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '32px', fill: '#fff' });
+            timeText = this.add.text(650, 16, 'Tiempo: ' + timeLeft, { fontSize: '32px', fill: '#fff' });
+            
+            this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
+        }
+        
+        function update() {
+            if (gameOver) return;
+            
+            if (cursors.left.isDown) {
+                player.setVelocityX(-200);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(200);
+            } else {
+                player.setVelocityX(0);
+            }
+        }
+        
+        function collectOlive(player, olive) {
+            olive.disableBody(true, true);
+            score += 10;
+            scoreText.setText('Puntos: ' + score);
+        }
+        
+        function updateTimer() {
+            timeLeft--;
+            timeText.setText('Tiempo: ' + timeLeft);
+            
+            if (timeLeft <= 0) {
+                endGame(this);
+            }
+        }
+        
+        function endGame(scene) {
+            gameOver = true;
+            player.setVelocityX(0);
+            player.setVisible(false);
+            
+            scene.add.rectangle(400, 300, 800, 600, 0xffffff).setDepth(1);
+            let message = score === 60 ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
+            scene.add.text(150, 250, message, { fontSize: '24px', fill: '#000', wordWrap: { width: 500 } }).setDepth(2);
+        }
+    </script>
+</body>
+</html>
