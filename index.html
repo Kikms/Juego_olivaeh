@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Juego de Recoger Aceitunas</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <style>
@@ -13,8 +13,12 @@
     <script>
         const config = {
             type: Phaser.AUTO,
-            width: 800,
-            height: 600,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
             physics: {
                 default: 'arcade',
                 arcade: {
@@ -47,10 +51,10 @@
         }
         
         function create() {
-            let bg = this.add.image(400, 300, 'background');
-            bg.setDisplaySize(800, 600); // Ajustar fondo al tamaño del juego
+            let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+            bg.setDisplaySize(this.scale.width, this.scale.height);
             
-            player = this.physics.add.sprite(400, 500, 'player').setScale(0.3);
+            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.15);
             player.setCollideWorldBounds(true);
             
             cursors = this.input.keyboard.createCursorKeys();
@@ -58,20 +62,19 @@
             olives = this.physics.add.group();
             
             for (let i = 0; i < 6; i++) {
-                let x = Phaser.Math.Between(50, 750);
+                let x = Phaser.Math.Between(50, this.scale.width - 50);
                 let y = Phaser.Math.Between(-600, -50);
-                let olive = olives.create(x, y, 'olive').setScale(0.2);
+                let olive = olives.create(x, y, 'olive').setScale(0.1);
                 olive.setVelocityY(Phaser.Math.Between(50, 150));
             }
             
             this.physics.add.overlap(player, olives, collectOlive, null, this);
             
-            scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '32px', fill: '#fff' });
-            timeText = this.add.text(650, 16, 'Tiempo: ' + timeLeft, { fontSize: '32px', fill: '#fff' });
+            scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
+            timeText = this.add.text(this.scale.width - 150, 16, 'Tiempo: ' + timeLeft, { fontSize: '24px', fill: '#fff' });
             
             this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
             
-            // Controles táctiles
             this.input.on('pointerdown', function (pointer) {
                 touchX = pointer.x;
             });
@@ -119,11 +122,10 @@
             player.setVelocityX(0);
             player.setVisible(false);
             
-            scene.add.rectangle(400, 300, 800, 600, 0xffffff).setDepth(1);
+            scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
             let message = score === 60 ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
-            scene.add.text(150, 250, message, { fontSize: '24px', fill: '#000', wordWrap: { width: 500 } }).setDepth(2);
+            scene.add.text(scene.scale.width / 4, scene.scale.height / 2.5, message, { fontSize: '24px', fill: '#000', wordWrap: { width: scene.scale.width / 2 } }).setDepth(2);
         }
     </script>
 </body>
 </html>
-
