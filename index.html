@@ -46,9 +46,10 @@
         }
         
         function create() {
-            this.add.image(400, 300, 'background');
+            let bg = this.add.image(400, 300, 'background');
+	    bg.setDisplaySize(800, 600); // Ajustar fondo al tamaño del juego
             
-            player = this.physics.add.sprite(40, 50, 'player');
+            player = this.physics.add.sprite(400, 500, 'player').setScale(0.8);
             player.setCollideWorldBounds(true);
             
             cursors = this.input.keyboard.createCursorKeys();
@@ -58,7 +59,7 @@
             for (let i = 0; i < 6; i++) {
                 let x = Phaser.Math.Between(50, 750);
                 let y = Phaser.Math.Between(-600, -50);
-                let olive = olives.create(x, y, 'olive');
+                let olive = olives.create(x, y, 'olive').setScale(0.8);
                 olive.setVelocityY(Phaser.Math.Between(50, 150));
             }
             
