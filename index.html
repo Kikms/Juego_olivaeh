@@ -41,6 +41,7 @@
         let scoreText;
         let gameOver = false;
         let touchX = null;
+        let totalOlives = 10;
         
         function preload() {
             this.load.image('background', 'assets/background.png');
@@ -50,20 +51,26 @@
         
         function create() {
             let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
-            bg.setScale(Math.max(this.scale.width / bg.width, this.scale.height / bg.height));
+            bg.setDisplaySize(this.scale.width, this.scale.height);
             
-            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.15);
+            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.45);
             player.setCollideWorldBounds(true);
             
             cursors = this.input.keyboard.createCursorKeys();
             
             olives = this.physics.add.group();
             
-            for (let i = 0; i < 10; i++) {
-                let x = Phaser.Math.Between(50, this.scale.width - 50);
-                let y = Phaser.Math.Between(-600, -50);
-                let olive = olives.create(x, y, 'olive').setScale(0.1);
-                olive.setVelocityY(Phaser.Math.Between(50, 150));
+            for (let i = 0; i < totalOlives; i++) {
+                this.time.addEvent({
+                    delay: Phaser.Math.Between(500, 3000), // Genera aceitunas con retardo aleatorio
+                    callback: () => {
+                        let x = Phaser.Math.Between(50, this.scale.width - 50);
+                        let y = Phaser.Math.Between(-600, -50);
+                        let olive = olives.create(x, y, 'olive').setScale(0.1);
+                        olive.setVelocityY(Phaser.Math.Between(50, 150));
+                    },
+                    callbackScope: this
+                });
             }
             
             this.physics.add.overlap(player, olives, collectOlive, null, this);
@@ -128,4 +135,5 @@
     </script>
 </body>
 </html>
+
 
