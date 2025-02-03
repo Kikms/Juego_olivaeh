@@ -38,16 +38,17 @@
         let timeText;
         let timeLeft = 17;
         let gameOver = false;
+        let touchX = null;
         
         function preload() {
-            	this.load.image('background', 'assets/background.png');
-		this.load.image('player', 'assets/player.png');
-		this.load.image('olive', 'assets/olive.png');;
+            this.load.image('background', 'assets/background.png');
+            this.load.image('player', 'assets/player.png');
+            this.load.image('olive', 'assets/olive.png');
         }
         
         function create() {
             let bg = this.add.image(400, 300, 'background');
-	    bg.setDisplaySize(800, 600); // Ajustar fondo al tamaño del juego
+            bg.setDisplaySize(800, 600); // Ajustar fondo al tamaño del juego
             
             player = this.physics.add.sprite(400, 500, 'player').setScale(0.3);
             player.setCollideWorldBounds(true);
@@ -69,6 +70,21 @@
             timeText = this.add.text(650, 16, 'Tiempo: ' + timeLeft, { fontSize: '32px', fill: '#fff' });
             
             this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
+            
+            // Controles táctiles
+            this.input.on('pointerdown', function (pointer) {
+                touchX = pointer.x;
+            });
+            
+            this.input.on('pointermove', function (pointer) {
+                if (touchX !== null) {
+                    player.x = pointer.x;
+                }
+            });
+            
+            this.input.on('pointerup', function () {
+                touchX = null;
+            });
         }
         
         function update() {
@@ -110,3 +126,4 @@
     </script>
 </body>
 </html>
+
