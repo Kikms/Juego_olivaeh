@@ -22,7 +22,7 @@
             physics: {
                 default: 'arcade',
                 arcade: {
-                    gravity: { y: 0 },
+                    gravity: { y: 200 },
                     debug: false
                 }
             },
@@ -39,8 +39,6 @@
         let olives;
         let score = 0;
         let scoreText;
-        let timeText;
-        let timeLeft = 17;
         let gameOver = false;
         let touchX = null;
         
@@ -52,16 +50,16 @@
         
         function create() {
             let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
-            bg.setDisplaySize(this.scale.width, this.scale.height);
+            bg.setScale(Math.max(this.scale.width / bg.width, this.scale.height / bg.height));
             
-            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.40);
+            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.15);
             player.setCollideWorldBounds(true);
             
             cursors = this.input.keyboard.createCursorKeys();
             
             olives = this.physics.add.group();
             
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 10; i++) {
                 let x = Phaser.Math.Between(50, this.scale.width - 50);
                 let y = Phaser.Math.Between(-600, -50);
                 let olive = olives.create(x, y, 'olive').setScale(0.1);
@@ -69,11 +67,9 @@
             }
             
             this.physics.add.overlap(player, olives, collectOlive, null, this);
+            this.physics.add.collider(olives, this.physics.world.bounds, dropOlive, null, this);
             
             scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
-            timeText = this.add.text(this.scale.width - 150, 16, 'Tiempo: ' + timeLeft, { fontSize: '24px', fill: '#fff' });
-            
-            this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
             
             this.input.on('pointerdown', function (pointer) {
                 touchX = pointer.x;
@@ -106,13 +102,16 @@
             olive.disableBody(true, true);
             score += 10;
             scoreText.setText('Puntos: ' + score);
+            checkEndGame();
         }
         
-        function updateTimer() {
-            timeLeft--;
-            timeText.setText('Tiempo: ' + timeLeft);
-            
-            if (timeLeft <= 0) {
+        function dropOlive(olive) {
+            olive.disableBody(true, true);
+            checkEndGame();
+        }
+        
+        function checkEndGame() {
+            if (olives.countActive(true) === 0) {
                 endGame(this);
             }
         }
@@ -123,9 +122,10 @@
             player.setVisible(false);
             
             scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
-            let message = score === 60 ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
+            let message = score === 100 ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Juego terminado. Inténtalo de nuevo.";
             scene.add.text(scene.scale.width / 4, scene.scale.height / 2.5, message, { fontSize: '24px', fill: '#000', wordWrap: { width: scene.scale.width / 2 } }).setDepth(2);
         }
     </script>
 </body>
 </html>
+
