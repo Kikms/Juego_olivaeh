@@ -32,7 +32,7 @@
                 update: update
             }
         };
-        
+
         const game = new Phaser.Game(config);
         let player;
         let cursors;
@@ -43,56 +43,56 @@
         let timeLeft = 17;
         let gameOver = false;
         let touchX = null;
-        
+
         function preload() {
             this.load.image('background', 'assets/background.png');
             this.load.image('player', 'assets/player.png');
             this.load.image('olive', 'assets/olive.png');
         }
-        
+
         function create() {
             let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
             bg.setDisplaySize(this.scale.width, this.scale.height);
-            
+
             player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.40);
             player.setCollideWorldBounds(true);
-            
+
             cursors = this.input.keyboard.createCursorKeys();
-            
+
             olives = this.physics.add.group();
-            
+
             for (let i = 0; i < 10; i++) {
                 let x = Phaser.Math.Between(50, this.scale.width - 50);
                 let y = Phaser.Math.Between(-600, -50);
                 let olive = olives.create(x, y, 'olive').setScale(0.1);
                 olive.setVelocityY(Phaser.Math.Between(50, 150));
             }
-            
+
             this.physics.add.overlap(player, olives, collectOlive, null, this);
-            
+
             scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
             timeText = this.add.text(this.scale.width - 150, 16, 'Tiempo: ' + timeLeft, { fontSize: '24px', fill: '#fff' });
-            
+
             this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
-            
+
             this.input.on('pointerdown', function (pointer) {
                 touchX = pointer.x;
             });
-            
+
             this.input.on('pointermove', function (pointer) {
                 if (touchX !== null) {
                     player.x = pointer.x;
                 }
             });
-            
+
             this.input.on('pointerup', function () {
                 touchX = null;
             });
         }
-        
+
         function update() {
             if (gameOver) return;
-            
+
             if (cursors.left.isDown) {
                 player.setVelocityX(-250);
             } else if (cursors.right.isDown) {
@@ -101,72 +101,72 @@
                 player.setVelocityX(0);
             }
         }
-        
+
         function collectOlive(player, olive) {
             olive.disableBody(true, true);
             score += 10;
             scoreText.setText('Puntos: ' + score);
         }
-        
+
         function updateTimer() {
             timeLeft--;
             timeText.setText('Tiempo: ' + timeLeft);
-            
+
             if (timeLeft <= 0) {
                 endGame(this);
             }
         }
-        
+
         function endGame(scene) {
-    gameOver = true;
-    player.setVelocityX(0);
-    player.setVisible(false);
+            gameOver = true;
+            player.setVelocityX(0);
+            player.setVisible(false);
 
-    // Fondo blanco encima del juego
-    scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
+            scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
 
-    let isWin = score >= 60;
-    let message = isWin ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
+            const isWin = score > 60;
+            const message = isWin 
+                ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" 
+                : "Tiempo agotado. Inténtalo de nuevo.";
 
-    // Agregar mensaje centrado
-    const textObj = scene.add.text(scene.scale.width / 4, scene.scale.height / 2.5, message, {
-        fontSize: '24px',
-        fill: '#000',
-        wordWrap: { width: scene.scale.width / 2 }
-    }).setDepth(2);
+            const textObj = scene.add.text(scene.scale.width / 2, scene.scale.height / 2.5, message, {
+                fontSize: '24px',
+                fill: '#000',
+                wordWrap: { width: scene.scale.width * 0.8 },
+                align: 'center'
+            }).setOrigin(0.5).setDepth(2);
 
-    // Si gana, añadir botón debajo del mensaje
-    setTimeout(() => {
-    const bounds = textObj.getBounds(); // Obtener posición y tamaño del texto
+            // Solo mostrar botón si ha ganado
+            if (isWin) {
+                setTimeout(() => {
+                    const bounds = textObj.getBounds();
 
-    const button = document.createElement("button");
-    button.innerText = "Copiar código";
-    button.style.position = "absolute";
-    button.style.left = `${bounds.centerX}px`;
-    button.style.top = `${bounds.bottom + 60}px`; // <-- Aumentamos margen aquí
-    button.style.transform = "translateX(-50%)";
-    button.style.padding = "10px 20px";
-    button.style.fontSize = "16px";
-    button.style.border = "none";
-    button.style.borderRadius = "10px";
-    button.style.backgroundColor = "#4CAF50";
-    button.style.color = "white";
-    button.style.zIndex = 1000;
-    button.style.cursor = "pointer";
+                    const button = document.createElement("button");
+                    button.innerText = "Copiar código";
+                    button.style.position = "absolute";
+                    button.style.left = `${bounds.centerX}px`;
+                    button.style.top = `${bounds.bottom + 60}px`; // 💡 bajado para evitar superposición
+                    button.style.transform = "translateX(-50%)";
+                    button.style.padding = "10px 20px";
+                    button.style.fontSize = "16px";
+                    button.style.border = "none";
+                    button.style.borderRadius = "10px";
+                    button.style.backgroundColor = "#4CAF50";
+                    button.style.color = "white";
+                    button.style.zIndex = 1000;
+                    button.style.cursor = "pointer";
 
-    button.onclick = function () {
-        navigator.clipboard.writeText("CIRI1209").then(() => {
-            button.innerText = "¡Copiado!";
-            setTimeout(() => button.innerText = "Copiar código", 2000);
-        });
-    };
+                    button.onclick = function () {
+                        navigator.clipboard.writeText("CIRI1209").then(() => {
+                            button.innerText = "¡Copiado!";
+                            setTimeout(() => button.innerText = "Copiar código", 2000);
+                        });
+                    };
 
-    document.body.appendChild(button);
-}, 100); // También aumentamos un poco el retardo para mayor fiabilidad
-
-    }
-}
-
+                    document.body.appendChild(button);
+                }, 100); // espera breve para que Phaser posicione correctamente
+            }
+        }
     </script>
 </body>
 </html>
