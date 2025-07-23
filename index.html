@@ -118,14 +118,48 @@
         }
         
         function endGame(scene) {
-            gameOver = true;
-            player.setVelocityX(0);
-            player.setVisible(false);
-            
-            scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
-            let message = score === 60 ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
-            scene.add.text(scene.scale.width / 4, scene.scale.height / 2.5, message, { fontSize: '24px', fill: '#000', wordWrap: { width: scene.scale.width / 2 } }).setDepth(2);
-        }
+    gameOver = true;
+    player.setVelocityX(0);
+    player.setVisible(false);
+
+    scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
+
+    let isWin = score >= 60;
+    let message = isWin ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" : "Tiempo agotado. Inténtalo de nuevo.";
+
+    scene.add.text(scene.scale.width / 4, scene.scale.height / 2.5, message, {
+        fontSize: '24px',
+        fill: '#000',
+        wordWrap: { width: scene.scale.width / 2 }
+    }).setDepth(2);
+
+    // Si es ganador, mostramos el botón de copiar
+    if (isWin) {
+        const button = document.createElement("button");
+        button.innerText = "Copiar código";
+        button.style.position = "absolute";
+        button.style.top = "55%";
+        button.style.left = "50%";
+        button.style.transform = "translate(-50%, -50%)";
+        button.style.padding = "10px 20px";
+        button.style.fontSize = "16px";
+        button.style.border = "none";
+        button.style.borderRadius = "10px";
+        button.style.backgroundColor = "#4CAF50";
+        button.style.color = "white";
+        button.style.zIndex = 1000;
+        button.style.cursor = "pointer";
+
+        button.onclick = function () {
+            navigator.clipboard.writeText("CIRI1209").then(() => {
+                button.innerText = "¡Copiado!";
+                setTimeout(() => button.innerText = "Copiar código", 2000);
+            });
+        };
+
+        document.body.appendChild(button);
+    }
+}
     </script>
 </body>
 </html>
