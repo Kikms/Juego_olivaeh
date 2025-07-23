@@ -136,35 +136,34 @@
     }).setDepth(2);
 
     // Si gana, añadir botón debajo del mensaje
-    if (isWin) {
-        // Esperar un breve momento para que Phaser calcule altura del texto
-        setTimeout(() => {
-            const bounds = textObj.getBounds(); // Obtener posición y tamaño del texto
+    setTimeout(() => {
+    const bounds = textObj.getBounds(); // Obtener posición y tamaño del texto
 
-            const button = document.createElement("button");
-            button.innerText = "Copiar código";
-            button.style.position = "absolute";
-            button.style.left = `${bounds.centerX}px`;
-            button.style.top = `${bounds.bottom + 20}px`; // 20px debajo del texto
-            button.style.transform = "translateX(-50%)";
-            button.style.padding = "10px 20px";
-            button.style.fontSize = "16px";
-            button.style.border = "none";
-            button.style.borderRadius = "10px";
-            button.style.backgroundColor = "#4CAF50";
-            button.style.color = "white";
-            button.style.zIndex = 1000;
-            button.style.cursor = "pointer";
+    const button = document.createElement("button");
+    button.innerText = "Copiar código";
+    button.style.position = "absolute";
+    button.style.left = `${bounds.centerX}px`;
+    button.style.top = `${bounds.bottom + 60}px`; // <-- Aumentamos margen aquí
+    button.style.transform = "translateX(-50%)";
+    button.style.padding = "10px 20px";
+    button.style.fontSize = "16px";
+    button.style.border = "none";
+    button.style.borderRadius = "10px";
+    button.style.backgroundColor = "#4CAF50";
+    button.style.color = "white";
+    button.style.zIndex = 1000;
+    button.style.cursor = "pointer";
 
-            button.onclick = function () {
-                navigator.clipboard.writeText("CIRI1209").then(() => {
-                    button.innerText = "¡Copiado!";
-                    setTimeout(() => button.innerText = "Copiar código", 2000);
-                });
-            };
+    button.onclick = function () {
+        navigator.clipboard.writeText("CIRI1209").then(() => {
+            button.innerText = "¡Copiado!";
+            setTimeout(() => button.innerText = "Copiar código", 2000);
+        });
+    };
 
-            document.body.appendChild(button);
-        }, 50); // Pequeña pausa para asegurar que Phaser haya renderizado el texto
+    document.body.appendChild(button);
+}, 100); // También aumentamos un poco el retardo para mayor fiabilidad
+
     }
 }
 
