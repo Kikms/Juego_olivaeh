@@ -7,9 +7,46 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
+
+        #popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 10;
+        }
+
+        #popup button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #popup button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
+    <div id="popup">
+        <p id="popupMessage"></p>
+        <button id="copyBtn" style="display: none;">Copiar código</button>
+    </div>
+
     <script>
         const config = {
             type: Phaser.AUTO,
@@ -122,50 +159,26 @@
             player.setVelocityX(0);
             player.setVisible(false);
 
-            scene.add.rectangle(scene.scale.width / 2, scene.scale.height / 2, scene.scale.width, scene.scale.height, 0xffffff).setDepth(1);
+            // Mostrar pop-up
+            const popup = document.getElementById('popup');
+            const messageEl = document.getElementById('popupMessage');
+            const copyBtn = document.getElementById('copyBtn');
 
-            const isWin = score > 60;
-            const message = isWin 
-                ? "Felicidades, aquí tienes tu código de descuento:\nCIRI1209" 
-                : "Tiempo agotado. Inténtalo de nuevo.";
-
-            const textObj = scene.add.text(scene.scale.width / 2, scene.scale.height / 2.5, message, {
-                fontSize: '24px',
-                fill: '#000',
-                wordWrap: { width: scene.scale.width * 0.8 },
-                align: 'center'
-            }).setOrigin(0.5).setDepth(2);
-
-            // Solo mostrar botón si ha ganado
-            if (isWin) {
-                setTimeout(() => {
-                    const bounds = textObj.getBounds();
-
-                    const button = document.createElement("button");
-                    button.innerText = "Copiar código";
-                    button.style.position = "absolute";
-                    button.style.left = `${bounds.centerX}px`;
-                    button.style.top = `${bounds.bottom + 60}px`; // 💡 bajado para evitar superposición
-                    button.style.transform = "translateX(-50%)";
-                    button.style.padding = "10px 20px";
-                    button.style.fontSize = "16px";
-                    button.style.border = "none";
-                    button.style.borderRadius = "10px";
-                    button.style.backgroundColor = "#4CAF50";
-                    button.style.color = "white";
-                    button.style.zIndex = 1000;
-                    button.style.cursor = "pointer";
-
-                    button.onclick = function () {
-                        navigator.clipboard.writeText("CIRI1209").then(() => {
-                            button.innerText = "¡Copiado!";
-                            setTimeout(() => button.innerText = "Copiar código", 2000);
-                        });
-                    };
-
-                    document.body.appendChild(button);
-                }, 100); // espera breve para que Phaser posicione correctamente
+            if (score > 60) {
+                messageEl.innerHTML = "🎉 Felicidades, aquí tienes tu código de descuento:<br><strong>CIRI1209</strong>";
+                copyBtn.style.display = "inline-block";
+            } else {
+                messageEl.textContent = "⏱ Tiempo agotado. Inténtalo de nuevo.";
+                copyBtn.style.display = "none";
             }
+
+            popup.style.display = "block";
+
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText("CIRI1209");
+                copyBtn.textContent = "¡Copiado!";
+                setTimeout(() => copyBtn.textContent = "Copiar código", 2000);
+            };
         }
     </script>
 </body>
