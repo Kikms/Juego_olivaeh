@@ -9,24 +9,8 @@
 <style>
 body { margin: 0; overflow: hidden; }
 
-/* POPUP FINAL */
-#popup {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 400px;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    display: none;
-    z-index: 10;
-}
-
-/* POPUP INICIAL */
-#startPopup {
+/* POPUPS */
+#popup, #startPopup {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -34,43 +18,34 @@ body { margin: 0; overflow: hidden; }
     width: 90%;
     max-width: 450px;
     background: white;
-    color: black;
     padding: 25px;
     border-radius: 12px;
-    text-align: left;
+    text-align: center;
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+#popup {
+    display: none;
+    z-index: 10;
+}
+
+#startPopup {
     z-index: 20;
-
-    /* Animación suave */
-    opacity: 0;
-    animation: popupIn 0.4s ease forwards;
 }
 
-@keyframes popupIn {
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-/* Botón cerrar */
-#closeStart {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 22px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-/* Botón copiar */
-button {
+/* BOTONES */
+.button {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 12px 25px;
     background: #4CAF50;
     color: white;
     border: none;
     border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 </style>
 </head>
@@ -79,22 +54,24 @@ button {
 
 <!-- POPUP INICIAL -->
 <div id="startPopup">
-    <div id="closeStart">✖</div>
     <p>
         <strong>¡Ayuda a Ciri a recolectar todas las aceitunas que puedas!</strong><br><br>
         Cada aceituna te dará 10 puntos, pero cuidado: no queremos las aceitunas que estén más pasadas, podrían estropear nuestro aceite. Evítalas o se restarán 10 puntos.<br><br>
         Si tu puntuación final es superior a 60 puntos, recibirás un código de descuento al terminar el minijuego.
     </p>
+
+    <button id="startBtn" class="button">Jugar</button>
 </div>
 
 <!-- POPUP FINAL -->
 <div id="popup">
     <p id="popupMessage"></p>
-    <button id="copyBtn" style="display:none;">Copiar código</button>
+    <button id="copyBtn" class="button" style="display:none;">Copiar código</button>
 </div>
 
 <script>
-let sceneRef; // 🔥 referencia a la escena
+let sceneRef;
+let timerEvent;
 
 const config = {
     type: Phaser.AUTO,
@@ -127,7 +104,7 @@ function preload() {
 }
 
 function create() {
-    sceneRef = this; // 🔥 guardamos referencia
+    sceneRef = this;
 
     let bg = this.add.image(this.scale.width/2, this.scale.height/2, 'background');
     bg.setDisplaySize(this.scale.width, this.scale.height);
@@ -161,13 +138,22 @@ function create() {
 
     scoreText = this.add.text(16,16,'Puntos: 0',{fontSize:'24px',fill:'#fff'});
 
-    this.time.addEvent({ delay:1000, callback:updateTimer, callbackScope:this, loop:true });
+    // ⏱ TIMER CONTROLADO (PRO)
+    timerEvent = this.time.addEvent({
+        delay: 1000,
+        callback: updateTimer,
+        callbackScope: this,
+        loop: true
+    });
 
+    timerEvent.paused = true; // 🔥 empieza pausado
+
+    // CONTROLES
     this.input.on('pointerdown', p => touchX=p.x);
     this.input.on('pointermove', p => { if(touchX!==null) player.x=p.x; });
     this.input.on('pointerup', () => touchX=null);
 
-    // 🔴 CONGELAR TODO EL JUEGO
+    // ❄️ congelar físicas
     this.physics.pause();
 }
 
@@ -227,10 +213,12 @@ function endGame(){
     };
 }
 
-// ✅ BOTÓN INICIAR (DESCONGELA TODO)
-document.getElementById("closeStart").onclick = () => {
+// ▶️ BOTÓN JUGAR
+document.getElementById("startBtn").onclick = () => {
     document.getElementById("startPopup").style.display = "none";
-    sceneRef.physics.resume(); // 🔥 AQUÍ ARRANCA TODO
+
+    sceneRef.physics.resume();   // físicas
+    timerEvent.paused = false;   // ⏱ tiempo
 };
 </script>
 
