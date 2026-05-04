@@ -107,15 +107,17 @@ function create() {
     for (let i = 0; i < 10; i++) {
         let x = Phaser.Math.Between(50, this.scale.width - 50);
         let y = Phaser.Math.Between(-600, -50);
-        let olive = olives.create(x, y, 'olive').setScale(0.1);
+        let olive = olives.create(x, y, 'olive');
+        olive.setDisplaySize(40, 40);
         olive.setVelocityY(Phaser.Math.Between(50, 150));
     }
 
     // 🔴 Aceitunas malas
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         let x = Phaser.Math.Between(50, this.scale.width - 50);
         let y = Phaser.Math.Between(-600, -50);
-        let oliveBad = olivesBad.create(x, y, 'oliveBad').setScale(0.1);
+        let oliveBad = olivesBad.create(x, y, 'oliveBad');
+        oliveBad.setDisplaySize(40, 40);
         oliveBad.setVelocityY(Phaser.Math.Between(50, 150));
     }
 
