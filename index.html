@@ -40,6 +40,17 @@ body { margin: 0; overflow: hidden; }
     text-align: left;
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
     z-index: 20;
+
+    /* Animación suave */
+    opacity: 0;
+    animation: popupIn 0.4s ease forwards;
+}
+
+@keyframes popupIn {
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 /* Botón cerrar */
@@ -83,12 +94,7 @@ button {
 </div>
 
 <script>
-let gameStarted = false;
-
-document.getElementById("closeStart").onclick = () => {
-    document.getElementById("startPopup").style.display = "none";
-    gameStarted = true;
-};
+let sceneRef; // 🔥 referencia a la escena
 
 const config = {
     type: Phaser.AUTO,
@@ -117,10 +123,12 @@ function preload() {
     this.load.image('background', 'assets/background.png');
     this.load.image('player', 'assets/player.png');
     this.load.image('olive', 'assets/olive.png');
-    this.load.image('oliveBad', 'assets/olive_mala.png');
+    this.load.image('oliveBad', 'assets/Olive_mala.png');
 }
 
 function create() {
+    sceneRef = this; // 🔥 guardamos referencia
+
     let bg = this.add.image(this.scale.width/2, this.scale.height/2, 'background');
     bg.setDisplaySize(this.scale.width, this.scale.height);
 
@@ -138,13 +146,13 @@ function create() {
 
     for (let i=0;i<10;i++){
         let olive = olives.create(Phaser.Math.Between(50,this.scale.width-50), Phaser.Math.Between(-600,-50),'olive');
-        olive.setDisplaySize(40,40);
+        olive.setDisplaySize(25,30);
         olive.setVelocityY(Phaser.Math.Between(50,150));
     }
 
-    for (let i=0;i<5;i++){
+    for (let i=0;i<8;i++){
         let oliveBad = olivesBad.create(Phaser.Math.Between(50,this.scale.width-50), Phaser.Math.Between(-600,-50),'oliveBad');
-        oliveBad.setDisplaySize(40,40);
+        oliveBad.setDisplaySize(25,30);
         oliveBad.setVelocityY(Phaser.Math.Between(50,150));
     }
 
@@ -158,10 +166,13 @@ function create() {
     this.input.on('pointerdown', p => touchX=p.x);
     this.input.on('pointermove', p => { if(touchX!==null) player.x=p.x; });
     this.input.on('pointerup', () => touchX=null);
+
+    // 🔴 CONGELAR TODO EL JUEGO
+    this.physics.pause();
 }
 
 function update() {
-    if (!gameStarted || gameOver) return;
+    if (gameOver) return;
 
     if (cursors.left.isDown) player.setVelocityX(-250);
     else if (cursors.right.isDown) player.setVelocityX(250);
@@ -188,8 +199,6 @@ function hitBadOlive(player, olive){
 }
 
 function updateTimer(){
-    if (!gameStarted) return;
-
     timeLeft--;
     if(timeLeft<=0) endGame();
 }
@@ -217,6 +226,12 @@ function endGame(){
         btn.textContent="¡Copiado!";
     };
 }
+
+// ✅ BOTÓN INICIAR (DESCONGELA TODO)
+document.getElementById("closeStart").onclick = () => {
+    document.getElementById("startPopup").style.display = "none";
+    sceneRef.physics.resume(); // 🔥 AQUÍ ARRANCA TODO
+};
 </script>
 
 </body>
