@@ -35,151 +35,177 @@
             font-size: 16px;
             cursor: pointer;
         }
-
-        #popup button:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
-    <div id="popup">
-        <p id="popupMessage"></p>
-        <button id="copyBtn" style="display: none;">Copiar código</button>
-    </div>
 
-    <script>
-        const config = {
-            type: Phaser.AUTO,
-            scale: {
-                mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: window.innerWidth,
-                height: window.innerHeight
-            },
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
-            },
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
+<div id="popup">
+    <p id="popupMessage"></p>
+    <button id="copyBtn" style="display: none;">Copiar código</button>
+</div>
 
-        const game = new Phaser.Game(config);
-        let player;
-        let cursors;
-        let olives;
-        let score = 0;
-        let scoreText;
-        let timeText;
-        let timeLeft = 17;
-        let gameOver = false;
-        let touchX = null;
-
-        function preload() {
-            this.load.image('background', 'assets/background.png');
-            this.load.image('player', 'assets/player.png');
-            this.load.image('olive', 'assets/olive.png');
+<script>
+const config = {
+    type: Phaser.AUTO,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: window.innerWidth,
+        height: window.innerHeight
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
         }
+    },
+    scene: {
+        preload,
+        create,
+        update
+    }
+};
 
-        function create() {
-            let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
-            bg.setDisplaySize(this.scale.width, this.scale.height);
+const game = new Phaser.Game(config);
 
-            player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.40);
-            player.setCollideWorldBounds(true);
+let player;
+let cursors;
+let olives;
+let olivesBad;
+let score = 0;
+let scoreText;
+let timeText;
+let timeLeft = 17;
+let gameOver = false;
+let touchX = null;
 
-            cursors = this.input.keyboard.createCursorKeys();
+function preload() {
+    this.load.image('background', 'assets/background.png');
+    this.load.image('player', 'assets/player.png');
+    this.load.image('olive', 'assets/olive.png');
+    this.load.image('oliveBad', 'assets/olive_mala.png');
+}
 
-            olives = this.physics.add.group();
+function create() {
+    let bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+    bg.setDisplaySize(this.scale.width, this.scale.height);
 
-            for (let i = 0; i < 10; i++) {
-                let x = Phaser.Math.Between(50, this.scale.width - 50);
-                let y = Phaser.Math.Between(-600, -50);
-                let olive = olives.create(x, y, 'olive').setScale(0.1);
-                olive.setVelocityY(Phaser.Math.Between(50, 150));
-            }
+    player = this.physics.add.sprite(this.scale.width / 2, this.scale.height * 0.85, 'player').setScale(0.40);
+    player.setCollideWorldBounds(true);
 
-            this.physics.add.overlap(player, olives, collectOlive, null, this);
+    // 🔽 Reducir hitbox al 50%
+    player.body.setSize(player.width * 0.5, player.height * 0.5);
+    player.body.setOffset(player.width * 0.25, player.height * 0.25);
 
-            scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
-            timeText = this.add.text(this.scale.width - 150, 16, 'Tiempo: ' + timeLeft, { fontSize: '24px', fill: '#fff' });
+    cursors = this.input.keyboard.createCursorKeys();
 
-            this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
+    olives = this.physics.add.group();
+    olivesBad = this.physics.add.group();
 
-            this.input.on('pointerdown', function (pointer) {
-                touchX = pointer.x;
-            });
+    // 🟢 Aceitunas buenas
+    for (let i = 0; i < 10; i++) {
+        let x = Phaser.Math.Between(50, this.scale.width - 50);
+        let y = Phaser.Math.Between(-600, -50);
+        let olive = olives.create(x, y, 'olive').setScale(0.1);
+        olive.setVelocityY(Phaser.Math.Between(50, 150));
+    }
 
-            this.input.on('pointermove', function (pointer) {
-                if (touchX !== null) {
-                    player.x = pointer.x;
-                }
-            });
+    // 🔴 Aceitunas malas
+    for (let i = 0; i < 5; i++) {
+        let x = Phaser.Math.Between(50, this.scale.width - 50);
+        let y = Phaser.Math.Between(-600, -50);
+        let oliveBad = olivesBad.create(x, y, 'oliveBad').setScale(0.1);
+        oliveBad.setVelocityY(Phaser.Math.Between(50, 150));
+    }
 
-            this.input.on('pointerup', function () {
-                touchX = null;
-            });
-        }
+    this.physics.add.overlap(player, olives, collectOlive, null, this);
+    this.physics.add.overlap(player, olivesBad, hitBadOlive, null, this);
 
-        function update() {
-            if (gameOver) return;
+    scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
+    timeText = this.add.text(this.scale.width - 150, 16, 'Tiempo: ' + timeLeft, { fontSize: '24px', fill: '#fff' });
 
-            if (cursors.left.isDown) {
-                player.setVelocityX(-250);
-            } else if (cursors.right.isDown) {
-                player.setVelocityX(250);
-            } else {
-                player.setVelocityX(0);
-            }
-        }
+    this.time.addEvent({ delay: 1000, callback: updateTimer, callbackScope: this, loop: true });
 
-        function collectOlive(player, olive) {
-            olive.disableBody(true, true);
-            score += 10;
-            scoreText.setText('Puntos: ' + score);
-        }
+    // Controles táctiles
+    this.input.on('pointerdown', pointer => touchX = pointer.x);
 
-        function updateTimer() {
-            timeLeft--;
-            timeText.setText('Tiempo: ' + timeLeft);
+    this.input.on('pointermove', pointer => {
+        if (touchX !== null) player.x = pointer.x;
+    });
 
-            if (timeLeft <= 0) {
-                endGame(this);
-            }
-        }
+    this.input.on('pointerup', () => touchX = null);
+}
 
-        function endGame(scene) {
-            gameOver = true;
-            player.setVelocityX(0);
-            player.setVisible(false);
+function update() {
+    if (gameOver) return;
 
-            // Mostrar pop-up
-            const popup = document.getElementById('popup');
-            const messageEl = document.getElementById('popupMessage');
-            const copyBtn = document.getElementById('copyBtn');
+    if (cursors.left.isDown) {
+        player.setVelocityX(-250);
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(250);
+    } else {
+        player.setVelocityX(0);
+    }
+}
 
-            if (score > 60) {
-                messageEl.innerHTML = "🎉 Felicidades, aquí tienes tu código de descuento:<br><strong>CIRI1209</strong>";
-                copyBtn.style.display = "inline-block";
-            } else {
-                messageEl.textContent = "⏱ Tiempo agotado. Inténtalo de nuevo.";
-                copyBtn.style.display = "none";
-            }
+// 🔽 SOLO CUENTA SI TOCA POR ARRIBA
+function isTouchingTop(player, olive) {
+    return olive.y < player.y - (player.displayHeight * 0.25);
+}
 
-            popup.style.display = "block";
+function collectOlive(player, olive) {
+    if (!isTouchingTop(player, olive)) return;
 
-            copyBtn.onclick = () => {
-                navigator.clipboard.writeText("CIRI1209");
-                copyBtn.textContent = "¡Copiado!";
-                setTimeout(() => copyBtn.textContent = "Copiar código", 2000);
-            };
-        }
-    </script>
+    olive.disableBody(true, true);
+    score += 10;
+    scoreText.setText('Puntos: ' + score);
+}
+
+function hitBadOlive(player, olive) {
+    if (!isTouchingTop(player, olive)) return;
+
+    olive.disableBody(true, true);
+    score -= 10;
+    if (score < 0) score = 0;
+    scoreText.setText('Puntos: ' + score);
+}
+
+function updateTimer() {
+    timeLeft--;
+    timeText.setText('Tiempo: ' + timeLeft);
+
+    if (timeLeft <= 0) {
+        endGame(this);
+    }
+}
+
+function endGame(scene) {
+    gameOver = true;
+    player.setVelocityX(0);
+    player.setVisible(false);
+
+    const popup = document.getElementById('popup');
+    const messageEl = document.getElementById('popupMessage');
+    const copyBtn = document.getElementById('copyBtn');
+
+    if (score > 60) {
+        messageEl.innerHTML = "🎉 Felicidades, aquí tienes tu código de descuento:<br><strong>CIRI1209</strong>";
+        copyBtn.style.display = "inline-block";
+    } else {
+        messageEl.textContent = "⏱ Tiempo agotado. Inténtalo de nuevo.";
+        copyBtn.style.display = "none";
+    }
+
+    popup.style.display = "block";
+
+    copyBtn.onclick = () => {
+        navigator.clipboard.writeText("CIRI1209");
+        copyBtn.textContent = "¡Copiado!";
+        setTimeout(() => copyBtn.textContent = "Copiar código", 2000);
+    };
+}
+</script>
+
 </body>
 </html>
