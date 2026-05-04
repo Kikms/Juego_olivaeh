@@ -115,7 +115,7 @@ function create() {
     for (let i = 0; i < 5; i++) {
         let x = Phaser.Math.Between(50, this.scale.width - 50);
         let y = Phaser.Math.Between(-600, -50);
-        let oliveBad = olivesBad.create(x, y, 'oliveBad').setScale(1);
+        let oliveBad = olivesBad.create(x, y, 'oliveBad').setScale(0.1);
         oliveBad.setVelocityY(Phaser.Math.Between(50, 150));
     }
 
