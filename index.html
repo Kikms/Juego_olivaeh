@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 
 <style>
-body { margin: 0; overflow: hidden; }
+body {
+    margin: 0;
+    overflow: hidden;
+}
 
 /* POPUPS */
 #popup, #startPopup {
@@ -22,6 +26,7 @@ body { margin: 0; overflow: hidden; }
     border-radius: 12px;
     text-align: center;
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    box-sizing: border-box;
 }
 
 #popup {
@@ -71,7 +76,6 @@ body { margin: 0; overflow: hidden; }
 
 <script>
 let sceneRef;
-let timerEvent;
 
 const config = {
     type: Phaser.AUTO,
@@ -83,7 +87,10 @@ const config = {
     },
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false }
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
+        }
     },
     scene: { preload, create, update }
 };
@@ -92,7 +99,6 @@ const game = new Phaser.Game(config);
 
 let player, cursors, olives, olivesBad;
 let score = 0, scoreText;
-let timeLeft = 17;
 let gameOver = false;
 let touchX = null;
 
@@ -106,121 +112,232 @@ function preload() {
 function create() {
     sceneRef = this;
 
-    let bg = this.add.image(this.scale.width/2, this.scale.height/2, 'background');
+    let bg = this.add.image(
+        this.scale.width / 2,
+        this.scale.height / 2,
+        'background'
+    );
+
     bg.setDisplaySize(this.scale.width, this.scale.height);
 
-    player = this.physics.add.sprite(this.scale.width/2, this.scale.height*0.85, 'player').setScale(0.40);
+    player = this.physics.add.sprite(
+        this.scale.width / 2,
+        this.scale.height * 0.85,
+        'player'
+    ).setScale(0.40);
+
     player.setCollideWorldBounds(true);
 
-    // Hitbox reducida
-    player.body.setSize(player.width*0.5, player.height*0.5);
-    player.body.setOffset(player.width*0.25, player.height*0.25);
+    // Hitbox reducida del personaje
+    player.body.setSize(
+        player.width * 0.5,
+        player.height * 0.5
+    );
+
+    player.body.setOffset(
+        player.width * 0.25,
+        player.height * 0.25
+    );
 
     cursors = this.input.keyboard.createCursorKeys();
 
     olives = this.physics.add.group();
     olivesBad = this.physics.add.group();
 
-    for (let i=0;i<10;i++){
-        let olive = olives.create(Phaser.Math.Between(50,this.scale.width-50), Phaser.Math.Between(-600,-50),'olive');
-        olive.setDisplaySize(40,30);
-        olive.setVelocityY(Phaser.Math.Between(50,150));
+    // Crear aceitunas
+    for (let i = 0; i < 10; i++) {
+        let olive = olives.create(
+            Phaser.Math.Between(50, this.scale.width - 50),
+            Phaser.Math.Between(-600, -50),
+            'olive'
+        );
+
+        olive.setDisplaySize(40, 30);
+        olive.setVelocityY(Phaser.Math.Between(50, 150));
+        olive.setData('processed', false);
     }
 
-    for (let i=0;i<8;i++){
-        let oliveBad = olivesBad.create(Phaser.Math.Between(50,this.scale.width-50), Phaser.Math.Between(-600,-50),'oliveBad');
-        oliveBad.setDisplaySize(40,30);
-        oliveBad.setVelocityY(Phaser.Math.Between(50,150));
+    // Crear hojas
+    for (let i = 0; i < 8; i++) {
+        let oliveBad = olivesBad.create(
+            Phaser.Math.Between(50, this.scale.width - 50),
+            Phaser.Math.Between(-600, -50),
+            'oliveBad'
+        );
+
+        oliveBad.setDisplaySize(40, 30);
+        oliveBad.setVelocityY(Phaser.Math.Between(50, 150));
+        oliveBad.setData('processed', false);
     }
 
-    this.physics.add.overlap(player, olives, collectOlive, null, this);
-    this.physics.add.overlap(player, olivesBad, hitBadOlive, null, this);
+    this.physics.add.overlap(
+        player,
+        olives,
+        collectOlive,
+        null,
+        this
+    );
 
-    scoreText = this.add.text(16,16,'Puntos: 0',{fontSize:'24px',fill:'#fff'});
+    this.physics.add.overlap(
+        player,
+        olivesBad,
+        hitBadOlive,
+        null,
+        this
+    );
 
-    // ⏱ TIMER CONTROLADO (PRO)
-    timerEvent = this.time.addEvent({
-        delay: 1000,
-        callback: updateTimer,
-        callbackScope: this,
-        loop: true
+    scoreText = this.add.text(
+        16,
+        16,
+        'Puntos: 0',
+        {
+            fontSize: '24px',
+            fill: '#fff'
+        }
+    );
+
+    // CONTROLES TÁCTILES
+    this.input.on('pointerdown', p => {
+        touchX = p.x;
     });
 
-    timerEvent.paused = true; // 🔥 empieza pausado
+    this.input.on('pointermove', p => {
+        if (touchX !== null && !gameOver) {
+            player.x = Phaser.Math.Clamp(
+                p.x,
+                player.displayWidth / 2,
+                this.scale.width - player.displayWidth / 2
+            );
+        }
+    });
 
-    // CONTROLES
-    this.input.on('pointerdown', p => touchX=p.x);
-    this.input.on('pointermove', p => { if(touchX!==null) player.x=p.x; });
-    this.input.on('pointerup', () => touchX=null);
+    this.input.on('pointerup', () => {
+        touchX = null;
+    });
 
-    // ❄️ congelar físicas
+    // Mantener el juego parado hasta pulsar "Jugar"
     this.physics.pause();
 }
 
 function update() {
     if (gameOver) return;
 
-    if (cursors.left.isDown) player.setVelocityX(-370);
-    else if (cursors.right.isDown) player.setVelocityX(370);
-    else player.setVelocityX(0);
+    if (cursors.left.isDown) {
+        player.setVelocityX(-370);
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(370);
+    } else {
+        player.setVelocityX(0);
+    }
+
+    // Eliminar objetos que hayan llegado al suelo
+    const groundY = this.scale.height;
+
+    [olives, olivesBad].forEach(group => {
+        group.getChildren().forEach(item => {
+            if (!item.active || item.getData('processed')) {
+                return;
+            }
+
+            if (item.y - item.displayHeight / 2 >= groundY) {
+                item.setData('processed', true);
+                item.disableBody(true, true);
+            }
+        });
+    });
+
+    // Finalizar cuando ya no quede ningún objeto activo
+    if (
+        olives.countActive(true) === 0 &&
+        olivesBad.countActive(true) === 0
+    ) {
+        endGame();
+    }
 }
 
-function isTouchingTop(player, olive){
-    return olive.y < player.y - (player.displayHeight*0.25);
+function isTouchingTop(player, olive) {
+    return olive.y < player.y - (player.displayHeight * 0.25);
 }
 
-function collectOlive(player, olive){
-    if(!isTouchingTop(player, olive)) return;
-    olive.disableBody(true,true);
-    score+=10;
-    scoreText.setText('Puntos: '+score);
+function collectOlive(player, olive) {
+    if (gameOver || !olive.active) return;
+    if (!isTouchingTop(player, olive)) return;
+
+    olive.setData('processed', true);
+    olive.disableBody(true, true);
+
+    score += 10;
+    scoreText.setText('Puntos: ' + score);
 }
 
-function hitBadOlive(player, olive){
-    if(!isTouchingTop(player, olive)) return;
-    olive.disableBody(true,true);
-    score-=10;
-    if(score<0) score=0;
-    scoreText.setText('Puntos: '+score);
+function hitBadOlive(player, olive) {
+    if (gameOver || !olive.active) return;
+    if (!isTouchingTop(player, olive)) return;
+
+    olive.setData('processed', true);
+    olive.disableBody(true, true);
+
+    score -= 10;
+
+    if (score < 0) {
+        score = 0;
+    }
+
+    scoreText.setText('Puntos: ' + score);
 }
 
-function updateTimer(){
-    timeLeft--;
-    if(timeLeft<=0) endGame();
-}
+function endGame() {
+    if (gameOver) return;
 
-function endGame(){
     gameOver = true;
+
+    // Detener el juego
+    sceneRef.physics.pause();
+    player.setVelocity(0, 0);
     player.setVisible(false);
 
     const popup = document.getElementById('popup');
     const msg = document.getElementById('popupMessage');
     const btn = document.getElementById('copyBtn');
 
-    if(score>60){
-        msg.innerHTML="🎉 Felicidades, aquí tienes tu código:<br><b>CIRI1209</b>";
-        btn.style.display="block";
-    }else{
-        msg.textContent="⏱ Inténtalo de nuevo";
-        btn.style.display="none";
+    if (score > 60) {
+        msg.innerHTML =
+            '🎉 ¡Felicidades! Has conseguido el código de descuento:<br><br>' +
+            '<b>CIRI1209</b>';
+
+        btn.style.display = 'block';
+    } else {
+        msg.textContent =
+            '¡Partida terminada! Tu puntuación es de ' +
+            score +
+            ' puntos. ¡Inténtalo de nuevo!';
+
+        btn.style.display = 'none';
     }
 
-    popup.style.display="block";
+    popup.style.display = 'block';
 
-    btn.onclick=()=>{
-        navigator.clipboard.writeText("CIRI1209");
-        btn.textContent="¡Copiado!";
+    btn.onclick = () => {
+        navigator.clipboard.writeText('CIRI1209')
+            .then(() => {
+                btn.textContent = '¡Copiado!';
+            })
+            .catch(() => {
+                msg.innerHTML +=
+                    '<br><br>No se pudo copiar automáticamente. ' +
+                    'Copia el código CIRI1209 manualmente.';
+            });
     };
 }
 
-// ▶️ BOTÓN JUGAR
-document.getElementById("startBtn").onclick = () => {
-    document.getElementById("startPopup").style.display = "none";
+// BOTÓN JUGAR
+document.getElementById('startBtn').onclick = () => {
+    document.getElementById('startPopup').style.display = 'none';
 
-    sceneRef.physics.resume();   // físicas
-    timerEvent.paused = false;   // ⏱ tiempo
+    sceneRef.physics.resume();
 };
 </script>
 
 </body>
 </html>
+```
